@@ -1,0 +1,175 @@
+package step2_00_loginEx;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+// DAO(Data Access Object) : 데이터 접근 객체
+public class MemberDao {
+
+	// Singleton 패턴
+	private MemberDao() {}
+	private static MemberDao instance = new MemberDao();
+	public static MemberDao getInstance() {
+		return instance;
+	}
+	
+	private Connection conn = null;
+	private PreparedStatement pstmt = null;
+	private ResultSet rs = null;
+	
+	
+	// 반환타입은 Connection 객체이며 메서드명은 관례적으로 getConnection으로 작성한다.
+	public Connection getConnection() {
+		
+		try {
+			
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			String url      = "jdbc:mysql://localhost:3306/login_ex?serverTimezone=UTC";
+			String user     = "root";		
+			String password = "1234";  
+			conn = DriverManager.getConnection(url, user, password);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return conn;
+		
+	}
+	
+	
+	// Join DAO
+	public boolean insertMember(MemberDto memberDto) {
+		
+		boolean isFirstMember = false;
+		
+		try {
+			
+			conn = getConnection();
+			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE ID = ?");
+			pstmt.setString(1, memberDto.getId());
+			rs = pstmt.executeQuery();
+			
+			if (!rs.next()) {
+				pstmt = conn.prepareStatement("INSERT INTO MEMBER VALUES(?,?,?,NOW())");
+				pstmt.setString(1, memberDto.getId());
+				pstmt.setString(2, memberDto.getPasswd());
+				pstmt.setString(3, memberDto.getName());
+				pstmt.executeUpdate();
+				isFirstMember = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (rs != null)    try {rs.close();}    catch (SQLException e) {e.printStackTrace();}
+			if (pstmt != null) try {pstmt.close();} catch (SQLException e) {e.printStackTrace();}
+			if (conn != null)  try {conn.close();}  catch (SQLException e) {e.printStackTrace();}
+		}
+		
+		return isFirstMember;
+		
+	}
+	
+	
+	// Login DAO
+	public boolean login(String id , String passwd) {
+		
+		boolean isValidMember = false;
+		
+		try {
+			
+			conn = getConnection();
+			
+			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE ID = ? AND PASSWD = ?");
+			pstmt.setString(1, id);
+			pstmt.setString(2, passwd);
+			rs = pstmt.executeQuery();
+				
+			if (rs.next()) {
+				isValidMember = true;
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (rs != null)    try {rs.close();}    catch (SQLException e) {e.printStackTrace();}
+			if (pstmt != null) try {pstmt.close();} catch (SQLException e) {e.printStackTrace();}
+			if (conn != null)  try {conn.close();}  catch (SQLException e) {e.printStackTrace();}
+		}
+		
+		return isValidMember;
+		
+	}
+	
+	
+	// delete DAO
+	public boolean deleteMember(MemberDto memberDto) {
+		
+		boolean isDeleteMember = false;
+		
+		try {
+			
+			conn = getConnection();
+			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE ID = ? AND PASSWD = ?");
+			pstmt.setString(1, memberDto.getId());
+			pstmt.setString(2, memberDto.getPasswd());
+			rs = pstmt.executeQuery();
+			
+			if (rs.next()) {
+				pstmt = conn.prepareStatement("DELETE FROM MEMBER WHERE ID = ?");
+				pstmt.setString(1, memberDto.getId());
+				pstmt.executeUpdate();
+				isDeleteMember = true;
+			}
+			
+		} catch (Exception e)  {
+			e.printStackTrace();
+		} finally {
+			if (rs != null)    try {rs.close();}    catch (SQLException e) {e.printStackTrace();}
+			if (pstmt != null) try {pstmt.close();} catch (SQLException e) {e.printStackTrace();}
+			if (conn != null)  try {conn.close();}  catch (SQLException e) {e.printStackTrace();}
+		}
+		
+		return isDeleteMember;
+		
+	}
+	
+	
+	// Update DAO
+	public boolean updateMember(MemberDto memberDto) {
+	
+		boolean isUpdateMember = false;
+		
+		try {
+			
+			conn = getConnection();
+			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE ID = ? AND PASSWD = ?");
+			pstmt.setString(1, memberDto.getId());
+			pstmt.setString(2, memberDto.getPasswd());
+			rs = pstmt.executeQuery();
+			
+			if (rs.next()) {
+				pstmt = conn.prepareStatement("UPDATE MEMBER SET NAME = ? WHERE ID = ?");
+				pstmt.setString(1, memberDto.getName());
+				pstmt.setString(2, memberDto.getId());
+				pstmt.executeUpdate();
+				isUpdateMember = true;
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (rs != null)    try {rs.close();}    catch (SQLException e) {e.printStackTrace();}
+			if (pstmt != null) try {pstmt.close();} catch (SQLException e) {e.printStackTrace();}
+			if (conn != null)  try {conn.close();}  catch (SQLException e) {e.printStackTrace();}
+		}
+		
+		return isUpdateMember;
+		
+	}
+	
+	
+}
